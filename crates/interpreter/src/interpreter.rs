@@ -18,7 +18,7 @@ pub use subroutine_stack::{SubRoutineImpl, SubRoutineReturnFrame};
 // imports
 use crate::{
     interpreter_types::*, CallInput, Gas, Host, Instruction, InstructionResult, InstructionTable,
-    InterpreterAction,
+    InterpreterAction, InstructionContext,
 };
 use bytecode::Bytecode;
 use loop_control::LoopControl as LoopControlImpl;
@@ -133,8 +133,14 @@ impl<IW: InterpreterTypes> Interpreter<IW> {
         // it will do noop and just stop execution of this contract
         self.bytecode.relative_jump(1);
 
+        // Create context
+        let mut context = InstructionContext {
+            interp: self,
+            host,
+        };
+
         // Execute instruction.
-        instruction_table[opcode as usize](self, host)
+        instruction_table[opcode as usize](&mut context)
     }
 
     /// Resets the control to the initial state. so that we can run the interpreter again.
