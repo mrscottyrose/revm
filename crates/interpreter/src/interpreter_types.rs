@@ -3,6 +3,7 @@ use bytecode::eof::CodeInfo;
 use core::cell::Ref;
 use core::ops::{Deref, Range};
 use primitives::{hardfork::SpecId, Address, Bytes, B256, U256};
+use crate::Interpreter;
 
 /// Helper function to read immediates data from the bytecode
 pub trait Immediates {
@@ -264,6 +265,12 @@ pub trait Interp {
 
     fn run(&mut self, instructions: &[Self::Instruction; 256]) -> Self::Action;
 }
+
+/// Instruction table is list of instructions mapped to their opcode.
+pub type InstructionTable<IW, H> = [Instruction<IW, H>; 256];
+
+/// Instruction function pointer.
+pub type Instruction<IW, H> = fn(&mut InstructionContext<'_, IW, H>);
 
 pub trait InterpreterTypes {
     type Stack: StackTr;
