@@ -241,8 +241,8 @@ pub fn tstore<WIRE: InterpreterTypes, H: Host + ?Sized>(
     require_non_staticcall!(interpreter);
     gas!(interpreter, gas::WARM_STORAGE_READ_COST);
 
-    popn!([index, value], interpreter);
-
+    check_staticcall!(interpreter);
+    popn!([value, index], interpreter);
     host.tstore(interpreter.input.target_address(), index, value);
 }
 
