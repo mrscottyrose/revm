@@ -44,6 +44,8 @@ pub fn tstore<ITy: InterpreterTypes, H: Host + ?Sized>(
 ) -> InterpreterResult {
     // Opcode is only enabled in Cancun.
     check!(context.interp, Cancun);
+    // Disallow writes during STATICCALL.
+    check_staticcall!(context.interp);
     gas!(context.interp, gas::TSTORE);
     let key = context.interp.stack.pop()?;
     let value = context.interp.stack.pop()?;

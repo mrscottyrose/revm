@@ -88,7 +88,10 @@ pub fn mulmod<ITy: InterpreterTypes, H: Host + ?Sized>(
 #[inline]
 pub fn exp<ITy: InterpreterTypes, H: Host + ?Sized>(context: &mut InstructionContext<'_, ITy, H>) -> InterpreterResult {
     gas!(context.interp, gas::exp_cost(context.interp.spec(), context.interp.stack.peek_at(1)?));
-    context.interp.stack.eval_top(|op1, op2| op1.pow(op2))?;
+    context
+        .interp
+        .stack
+        .eval_top(|op1, op2| (op1.pow(op2), false))?;
     Ok(())
 }
 

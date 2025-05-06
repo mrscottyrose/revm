@@ -166,30 +166,36 @@ fn common_create<ITy: InterpreterTypes, H: Host + ?Sized>(
         None
     };
 
-    let mut gas = context.interp.gas();
+    let gas = context.interp.gas();
     // EIP-150: Gas cost changes for IO-heavy operations
     if context.interp.call_depth >= 1024 {
         return Err(InstructionResult::CallDepthOverflow.into());
     }
     let remaining_gas = gas.remaining();
-    let mut create_gas = remaining_gas.saturating_sub(gas.remaining() / 64);
+    // Max gas for call is 63/64 of remaining gas.
+    let mut create_gas = remaining_gas.saturating_sub(remaining_gas / 64);
 
     // Reduce gas cost of Shanghai.
     if context.interp.spec().enabled(Shanghai) {
         // TODO gas initcode cost
     }
 
-    gas.record_cost(create_gas);
-    // take remaining gas and deduce max_call_gas.
+    // Reserve the sub-call gas by taking it rather than charging it as cost.
+    if gas.take(create_gas).is_err() {
+        // If take fails (e.g. not enough gas), host.create will likely also fail or handle it.
+    }
+
     let mut call_result = context.host.create(
         context.interp.contract.caller,
         value,
         code.into(),
         salt,
-        create_gas,
+        create_gas, // This is the gas limit for the sub-call
     )?;
-    gas.erase_cost(call_result.gas_used);
-    gas.record_refund(call_result.gas_refund);
+
+    // Reconcile gas after the sub-call returns.
+    gas.refund_unused(call_result.gas_left);
+    gas.record_refund(call_result.gas_refund); // Keep existing explicit gas refund mechanism
 
     let created_address = if call_result.result.is_error() {
         U256::ZERO

@@ -1,9 +1,8 @@
-use crate::{
-    gas, interpreter::Interpreter,
-    primitives::{Spec, U256},
-    Host,
-    InstructionContext, InterpreterResult,
-};
++use crate::{
+    +    gas,
+    +    primitives::U256,
+    +    Host, InstructionContext, InterpreterResult, InterpreterTypes,
+    +};
 
 /// Load a word from memory.
 #[inline]
@@ -25,8 +24,8 @@ pub fn mstore<ITy: InterpreterTypes, H: Host + ?Sized>(
     context: &mut InstructionContext<'_, ITy, H>,
 ) -> InterpreterResult {
     gas!(context.interp, gas::VERYLOW);
-    let value = context.interp.stack.pop()?;
     let offset_u256 = context.interp.stack.pop()?;
+    let value       = context.interp.stack.pop()?;
     let offset: usize = offset_u256
         .try_into()
         .map_err(|_| crate::InstructionResult::InvalidMemoryOffset)?;

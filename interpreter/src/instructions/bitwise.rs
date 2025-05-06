@@ -118,7 +118,10 @@ pub fn shl<ITy: InterpreterTypes, H: Host + ?Sized>(context: &mut InstructionCon
     // EIP-145: Bitwise shifting instructions
     check!(context.interp, Constantinople);
     gas!(context.interp, gas::VERYLOW);
-    context.interp.stack.eval_top(|op1, op2| (op2 << op1, false))?;
+    context.interp.stack.eval_top(|shift, value| {
+        let shift_val: usize = (shift & U256::from(255u8)).as_usize();
+        (value << shift_val, false)
+    })?;
     Ok(())
 }
 
@@ -128,7 +131,10 @@ pub fn shr<ITy: InterpreterTypes, H: Host + ?Sized>(context: &mut InstructionCon
     // EIP-145: Bitwise shifting instructions
     check!(context.interp, Constantinople);
     gas!(context.interp, gas::VERYLOW);
-    context.interp.stack.eval_top(|op1, op2| (op2 >> op1, false))?;
+    context.interp.stack.eval_top(|shift, value| {
+        let shift_val: usize = (shift & U256::from(255u8)).as_usize();
+        (value >> shift_val, false)
+    })?;
     Ok(())
 }
 
@@ -138,6 +144,9 @@ pub fn sar<ITy: InterpreterTypes, H: Host + ?Sized>(context: &mut InstructionCon
     // EIP-145: Bitwise shifting instructions
     check!(context.interp, Constantinople);
     gas!(context.interp, gas::VERYLOW);
-    context.interp.stack.eval_top(|op1, op2| (op2.sar(op1), false))?;
+    context.interp.stack.eval_top(|shift, value| {
+        let shift_val: usize = (shift & U256::from(255u8)).as_usize();
+        (value.sar(shift_val), false)
+    })?;
     Ok(())
 } 

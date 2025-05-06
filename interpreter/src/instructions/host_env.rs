@@ -124,7 +124,7 @@ pub fn extcodesize<ITy: InterpreterTypes, H: Host + ?Sized>(
 pub fn extcodesize_pre_berlin<ITy: InterpreterTypes, H: Host + ?Sized>(
     context: &mut InstructionContext<'_, ITy, H>,
 ) -> InterpreterResult {
-    gas!(context.interp, gas::EXTCODEHASH); //TODO check gas cost
+    gas!(context.interp, gas::EXTCODESIZE_PRE_BERLIN);
     pop_address!(context.interp, address);
     let (codehash, is_cold) = context.host.code_hash(address)?;
     debug_assert!(!is_cold);
@@ -329,7 +329,6 @@ pub fn blobbasefee<ITy: InterpreterTypes, H: Host + ?Sized>(
     // EIP-7516: BLOBBASEFEE opcode
     check!(context.interp, Cancun);
     gas!(context.interp, gas::BASE);
-    // If check!(Cancun) passes, get_blob_gasprice() should return Some.
     let price = context.host.env().block.get_blob_gasprice().unwrap();
     context.interp.stack.push(U256::from(price))?;
     Ok(())

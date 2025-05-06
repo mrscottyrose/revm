@@ -1,8 +1,7 @@
 use crate::{
-    gas, interpreter::Interpreter,
-    primitives::{Spec::*, U256},
+    gas,
     Host,
-    InstructionContext, InterpreterResult,
+    InstructionContext, InterpreterResult, InstructionResult, InterpreterTypes,
 };
 
 /// Halts execution and returns the data from the specified memory range.
