@@ -52,10 +52,15 @@ pub fn selfdestruct<ITy: InterpreterTypes, H: Host + ?Sized>(
 
     pop_address!(context.interp, target);
 
+    // Charge base gas cost *before* the host call (EIP-2929).
+    // Requires querying the cold/warm status beforehand.
+    let is_cold = context.host.is_cold(target)?; // Assuming host provides this check
+    gas!(context.interp, gas::selfdestruct_cost(context.interp.spec(), is_cold));
+
+    // Execute the actual selfdestruct via the host.
     let res = context.host.selfdestruct(context.interp.contract.address, target)?;
 
-    // Base SELFDESTRUCT cost including cold-account surcharge.
-    gas!(context.interp, gas::selfdestruct_cost(context.interp.spec(), res));
+    // Apply gas top-up based on the result of the selfdestruct action.
     gas!(context.interp, gas::selfdestruct_gas_topup(
         context.interp.spec(),
         res,

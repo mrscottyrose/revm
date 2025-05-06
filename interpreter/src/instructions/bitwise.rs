@@ -119,8 +119,13 @@ pub fn shl<ITy: InterpreterTypes, H: Host + ?Sized>(context: &mut InstructionCon
     check!(context.interp, Constantinople);
     gas!(context.interp, gas::VERYLOW);
     context.interp.stack.eval_top(|shift, value| {
-        let shift_val: usize = (shift & U256::from(255u8)).as_usize();
-        (value << shift_val, false)
+        // EVM spec: if shift >= 256 the result is zero.
+        if shift >= U256::from(256u8) {
+            (U256::ZERO, false)
+        } else {
+            // Cast is safe as shift < 256.
+            (value << shift.as_limbs()[0] as usize, false)
+        }
     })?;
     Ok(())
 }
@@ -132,8 +137,13 @@ pub fn shr<ITy: InterpreterTypes, H: Host + ?Sized>(context: &mut InstructionCon
     check!(context.interp, Constantinople);
     gas!(context.interp, gas::VERYLOW);
     context.interp.stack.eval_top(|shift, value| {
-        let shift_val: usize = (shift & U256::from(255u8)).as_usize();
-        (value >> shift_val, false)
+        // EVM spec: if shift >= 256 the result is zero.
+        if shift >= U256::from(256u8) {
+            (U256::ZERO, false)
+        } else {
+            // Cast is safe as shift < 256.
+            (value >> shift.as_limbs()[0] as usize, false)
+        }
     })?;
     Ok(())
 }
@@ -145,8 +155,16 @@ pub fn sar<ITy: InterpreterTypes, H: Host + ?Sized>(context: &mut InstructionCon
     check!(context.interp, Constantinople);
     gas!(context.interp, gas::VERYLOW);
     context.interp.stack.eval_top(|shift, value| {
-        let shift_val: usize = (shift & U256::from(255u8)).as_usize();
-        (value.sar(shift_val), false)
+        // EVM spec: if shift >= 256, result is 0 or -1 based on sign bit.
+        if shift >= U256::from(256u8) {
+            (
+                if value.bit(255) { U256::MAX } else { U256::ZERO }, // Check sign bit
+                false,
+            )
+        } else {
+            // Cast is safe as shift < 256.
+            (value.sar(shift.as_limbs()[0] as usize), false)
+        }
     })?;
     Ok(())
 } 

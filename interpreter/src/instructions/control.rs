@@ -47,8 +47,9 @@ pub fn tstore<ITy: InterpreterTypes, H: Host + ?Sized>(
     // Disallow writes during STATICCALL.
     check_staticcall!(context.interp);
     gas!(context.interp, gas::TSTORE);
-    let key = context.interp.stack.pop()?;
+    // EIP-1153 expects (value, key) at the top of the stack.
     let value = context.interp.stack.pop()?;
+    let key   = context.interp.stack.pop()?;
     context.host.tstore(key, value)
 }
 

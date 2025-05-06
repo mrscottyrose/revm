@@ -329,7 +329,8 @@ pub fn blobbasefee<ITy: InterpreterTypes, H: Host + ?Sized>(
     // EIP-7516: BLOBBASEFEE opcode
     check!(context.interp, Cancun);
     gas!(context.interp, gas::BASE);
-    let price = context.host.env().block.get_blob_gasprice().unwrap();
-    context.interp.stack.push(U256::from(price))?;
+    let price_u64 = context.host.env().block.get_blob_gasprice()
+        .ok_or(InstructionResult::InternalError)?;
+    context.interp.stack.push(U256::from(price_u64))?;
     Ok(())
 } 

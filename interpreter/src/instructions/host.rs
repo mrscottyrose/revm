@@ -181,9 +181,9 @@ fn common_create<ITy: InterpreterTypes, H: Host + ?Sized>(
     }
 
     // Reserve the sub-call gas by taking it rather than charging it as cost.
-    if gas.take(create_gas).is_err() {
-        // If take fails (e.g. not enough gas), host.create will likely also fail or handle it.
-    }
+    // Immediately return OutOfGas if the take fails.
+    gas.take(create_gas)
+        .map_err(|_| InstructionResult::OutOfGas)?; // Assuming take returns Result<(), Error>
 
     let mut call_result = context.host.create(
         context.interp.contract.caller,
