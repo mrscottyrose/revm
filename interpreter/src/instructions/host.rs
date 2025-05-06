@@ -175,15 +175,27 @@ fn common_create<ITy: InterpreterTypes, H: Host + ?Sized>(
     // Max gas for call is 63/64 of remaining gas.
     let mut create_gas = remaining_gas.saturating_sub(remaining_gas / 64);
 
-    // Reduce gas cost of Shanghai.
+    // Apply EIP-3860 initcode cost if Shanghai is enabled.
     if context.interp.spec().enabled(Shanghai) {
-        // TODO gas initcode cost
+        // EIP-3860: Limit and meter initcode. Cost is 2 gas per 32-byte word, rounded up.
+        match u64::try_from(len) {
+             Ok(len_u64) => {
+                 const G_INITCODE_WORD_COST: u64 = 2;
+                 let num_words = len_u64.saturating_add(31) / 32;
+                 let initcode_cost = num_words.saturating_mul(G_INITCODE_WORD_COST);
+                 gas_or_fail!(context.interp, initcode_cost);
+             }
+             Err(_) => {
+                 // If length doesn't fit in u64, it's likely an OOG/memory expansion issue.
+                 return Err(InstructionResult::OutOfGas.into());
+             }
+         }
     }
 
     // Reserve the sub-call gas by taking it rather than charging it as cost.
     // Immediately return OutOfGas if the take fails.
     gas.take(create_gas)
-        .map_err(|_| InstructionResult::OutOfGas)?; // Assuming take returns Result<(), Error>
+        .map_err(|_| InstructionResult::OutOfGas)?;
 
     let mut call_result = context.host.create(
         context.interp.contract.caller,
