@@ -50,11 +50,13 @@ pub fn selfdestruct<ITy: InterpreterTypes, H: Host + ?Sized>(
 ) -> InterpreterResult {
     check_staticcall!(context.interp);
     check!(context.interp, Berlin);
-    gas!(context.interp, gas::selfdestruct_cost(context.interp.spec()));
 
     pop_address!(context.interp, target);
 
     let res = context.host.selfdestruct(context.interp.contract.address, target)?;
+
+    // Base SELFDESTRUCT cost including cold-account surcharge.
+    gas!(context.interp, gas::selfdestruct_cost(context.interp.spec(), res));
     gas!(context.interp, gas::selfdestruct_gas_topup(
         context.interp.spec(),
         res,

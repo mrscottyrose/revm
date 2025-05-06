@@ -1,6 +1,7 @@
 use crate::{
-    gas, interpreter::Interpreter,
+    gas,
     primitives::{Spec, U256},
+    interpreter_types::InterpreterTypes,
     Host,
     InstructionContext, InterpreterResult,
 };

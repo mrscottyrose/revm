@@ -38,7 +38,7 @@ pub fn div<ITy: InterpreterTypes, H: Host + ?Sized>(context: &mut InstructionCon
         if op2 == U256::ZERO {
             (U256::ZERO, false)
         } else {
-            op1.overflowing_div(op2)
+            (op1 / op2, false)
         }
     })?;
     Ok(())

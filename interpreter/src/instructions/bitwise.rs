@@ -61,7 +61,9 @@ pub fn iszero<ITy: InterpreterTypes, H: Host + ?Sized>(
     context: &mut InstructionContext<'_, ITy, H>,
 ) -> InterpreterResult {
     gas!(context.interp, gas::VERYLOW);
-    context.interp.stack.eval_top(|op1, _| (U256::from(op1 == U256::ZERO), false))?;
+    // pop exactly one value, test for zero, then push the result
+    let value = context.interp.stack.pop_u256()?;
+    context.interp.stack.push(U256::from(value == U256::ZERO))?;
     Ok(())
 }
 
@@ -97,7 +99,8 @@ pub fn bitxor<ITy: InterpreterTypes, H: Host + ?Sized>(
 #[inline]
 pub fn not<ITy: InterpreterTypes, H: Host + ?Sized>(context: &mut InstructionContext<'_, ITy, H>) -> InterpreterResult {
     gas!(context.interp, gas::VERYLOW);
-    context.interp.stack.eval_top(|op1, _| (!op1, false))?;
+    let value = context.interp.stack.pop_u256()?;
+    context.interp.stack.push(!value)?;
     Ok(())
 }
 

@@ -1,8 +1,9 @@
 use crate::{
-    gas, interpreter::Interpreter,
+    gas,
     primitives::{Spec::*, B256, U256},
     Host,
     InstructionContext, InterpreterResult,
+    interpreter_types::InterpreterTypes,
 };
 
 /// Get the address of the executing account.
@@ -328,7 +329,8 @@ pub fn blobbasefee<ITy: InterpreterTypes, H: Host + ?Sized>(
     // EIP-7516: BLOBBASEFEE opcode
     check!(context.interp, Cancun);
     gas!(context.interp, gas::BASE);
-    // TODO: This is not spec compliant, fix host interface to be able to return Option
-    context.interp.stack.push(context.host.env().block.get_blob_gasprice().map_or(U256::ZERO, U256::from))?;
+    // If check!(Cancun) passes, get_blob_gasprice() should return Some.
+    let price = context.host.env().block.get_blob_gasprice().unwrap();
+    context.interp.stack.push(U256::from(price))?;
     Ok(())
 } 

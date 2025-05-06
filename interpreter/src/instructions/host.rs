@@ -6,11 +6,12 @@ use crate::{
     interpreter_types::InterpreterTypes,
 };
 
-/// EIP-1153: Transient storage opcode. TSTORE
+/// SLOAD instruction (EIP-2929/BERLIN variant)
 #[inline]
 pub fn sload<ITy: InterpreterTypes, H: Host + ?Sized>(context: &mut InstructionContext<'_, ITy, H>) -> InterpreterResult {
     check!(context.interp, Istanbul);
-    gas!(context.interp, gas::sload_cost(context.interp.spec()));
+    // Warm-access cost first; the cold surcharge (if any) is added later.
+    gas!(context.interp, gas::sload_cost(context.interp.spec(), /*is_cold=*/false));
 
     let index = context.interp.stack.pop()?;
     let (value, is_cold) = context.host.sload(context.interp.contract.address, index)?;
@@ -48,7 +49,8 @@ pub fn sstore<ITy: InterpreterTypes, H: Host + ?Sized>(
         context
             .host
             .sstore(context.interp.contract.address, index, value)?;
-    let gas_cost = gas::sstore_cost(context.interp.spec(), original, old, new, is_cold);
+    let sstore_result = gas::SStoreResult { original, old, new };
+    let gas_cost = gas::sstore_cost(context.interp.spec(), &sstore_result, is_cold);
     gas_or_fail!(context.interp, gas_cost);
     context.interp.gas.record_refund(context.host.sstore_refund());
     Ok(())
@@ -113,7 +115,8 @@ fn common_log<ITy: InterpreterTypes, H: Host + ?Sized>(
 ) -> InterpreterResult {
     check_staticcall!(context.interp);
     pop_memory_range!(context.interp, offset, len);
-    gas_or_fail!(context.interp, gas::log_cost(n, len));
+    // Calculate gas cost.
+    gas_or_fail!(context.interp, gas::log_cost(n as u8, len as u64));
     let data = context.interp.shared_memory.slice_range(offset, len);
 
     let mut topics = crate::alloc::vec::Vec::with_capacity(n);

@@ -1,8 +1,9 @@
 use crate::{
-    gas, interpreter::Interpreter,
+    gas,
     primitives::{Spec, I256, U256},
     Host,
     InstructionContext, InterpreterResult,
+    interpreter_types::InterpreterTypes,
 };
 
 /// Signed division operation.

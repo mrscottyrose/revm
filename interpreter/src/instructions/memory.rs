@@ -41,8 +41,8 @@ pub fn mstore8<ITy: InterpreterTypes, H: Host + ?Sized>(
     context: &mut InstructionContext<'_, ITy, H>,
 ) -> InterpreterResult {
     gas!(context.interp, gas::VERYLOW);
-    let value = context.interp.stack.pop()?;
     let offset_u256 = context.interp.stack.pop()?;
+    let value       = context.interp.stack.pop()?;
     let offset: usize = offset_u256
         .try_into()
         .map_err(|_| crate::InstructionResult::InvalidMemoryOffset)?;
